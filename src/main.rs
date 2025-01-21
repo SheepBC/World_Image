@@ -3,8 +3,8 @@ use image::{ ImageBuffer,RgbImage};
 use noise::{NoiseFn, Perlin};
 use rand::random;
 
-const WIDTH: u32 = 8000;
-const HEIGHT: u32 = 4000;
+const WIDTH: u32 = 1000;
+const HEIGHT: u32 = 500;
 const SAME: f64 = 0.1;
 
 fn main() {
@@ -26,8 +26,6 @@ fn main() {
 
 fn get_color(noise: &WorldNoise,x: u32,y: u32) -> [u8; 3]{
     let value = noise.get_value(x as f64, y as f64);
-    let gray = (255.0 * value) as u8;
-    //return [gray,gray,gray];
 
     let result: [u8; 3] = 
     if isvalue(value, 1) {[27,36,71]}
@@ -110,28 +108,22 @@ impl WorldNoise {
 
     fn get_value(&self, x: f64, y: f64) -> f64{
 
-        if((x >= WIDTH as f64*SAME && x <= WIDTH as f64*(1.0 -SAME))){
+        if x >= WIDTH as f64*SAME && x <= WIDTH as f64*(1.0 -SAME){
             return self.get_noise_value(x, y);
         }
         else{
 
-
-            let mut addx = x;
-            let mut smoothx = x;
-
-            if x < WIDTH as f64*SAME {
-                addx = x;
-                smoothx = WIDTH as f64 + x;
+            let (add_x,smooth_x) = if x < WIDTH as f64*SAME {
+                (x,WIDTH as f64 + x)
             }else {
-                addx = x - WIDTH as f64;
-                smoothx = x;
+                (x - WIDTH as f64,x)
             };
 
-            let smooth = smooth( addx/(WIDTH as f64*SAME));
+            let smooth = smooth( add_x/(WIDTH as f64*SAME));
             //println!("{}",smooth);
 
             let main_value = self.get_noise_value(x, y);
-            let smooth_value = self.get_noise_value(smoothx, y);
+            let smooth_value = self.get_noise_value(smooth_x, y);
 
             main_value*(1.0-smooth)+smooth_value*smooth
             //main_value
