@@ -3,26 +3,24 @@ use image::{ ImageBuffer,RgbImage};
 use noise::{NoiseFn, Perlin};
 use rand::random;
 
-const WIDTH: u32 = 1000;
-const HEIGHT: u32 = 500;
+const WIDTH: u32 = 2000;
+const HEIGHT: u32 = 1000;
 const SAME: f64 = 0.1;
 
 fn main() {
 
     let mut img: RgbImage = ImageBuffer::new(WIDTH, HEIGHT);
 
-    let noise = WorldNoise::new(135.0);
+    let noise = WorldNoise::new(60.0);
 
     for x in 0..WIDTH{
         for y in 0..HEIGHT{
             img.set_rgb(x, y, get_color(&noise,x, y));
         }
-        println!("{}",x);
     }
 
     img.save("World.png").unwrap();
 }
-
 
 fn get_color(noise: &WorldNoise,x: u32,y: u32) -> [u8; 3]{
     let value = noise.get_value(x as f64, y as f64);
@@ -55,7 +53,7 @@ fn get_color(noise: &WorldNoise,x: u32,y: u32) -> [u8; 3]{
         [236,235,231]
     };
     
-    if value >= 1. {
+    if value > 1. {
         println!("{value}");
     }
 
@@ -107,7 +105,7 @@ impl WorldNoise {
     }
 
     fn get_value(&self, x: f64, y: f64) -> f64{
-
+        
         if x >= WIDTH as f64*SAME && x <= WIDTH as f64*(1.0 -SAME){
             return self.get_noise_value(x, y);
         }
@@ -143,7 +141,19 @@ impl WorldNoise {
         let mut value3 = (self.noise3.get([x/ self.zoom3,y/self.zoom3,0.0]) +1.0)/2.0;
         value3 = eioq(value3);
 
-        (main_value*2.0+value2*1.0)/3.0*0.85+value3*0.15
+        let result = (main_value*2.0+value2*1.0)/3.0*0.85+value3*0.15;
+
+        let sea_noise_zoom = self.main_zoom*2.0;
+        let mut sea_value = f64::atan(10.0*self.noise.get([x/ sea_noise_zoom,y/sea_noise_zoom,12.34]))/2.0+0.5;
+
+        if sea_value > 1.05{
+            sea_value = 1.05;
+        }else if sea_value <= 0.0{
+            sea_value = 0.0;
+        }
+
+        f64::min((sea_value*0.7+0.3)*result, 1.0)
+
 
     }
 
